@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  coding-standards:
+    name: CS, PHPStan checks
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: [8.3]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          tools: composer
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest
+      - name: Run Coding Standards Check
+        run: composer run cs-check app
+      - name: Run PHPStan
+        run: composer run phpstan
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build docker
+        run: make run
+      - name: Run tests
+        run: make test
